@@ -1,0 +1,7 @@
+export type UserRole = "ADMIN" | "MECHANIC" | "WAREHOUSE" | "SALES" | "MANAGER";
+export interface SessionUser { id: string; name: string; email: string; role: UserRole; specialty?: string | null; shift?: string | null }
+export interface PartItem { id: string; sku: string; name: string; description?: string | null; category?: string; brandName?: string | null; oemCode?: string | null; priceWorkshop: number; priceRetail?: number; cost?: number; stock: number; reserved: number; available: number; locations: string[]; isActive: boolean }
+export interface ApiList<T> { data: T[]; page?: number; pages?: number; total?: number }
+export interface RepairOrder { id: string; code: string; plate: string; model: { brand: { name: string }; name: string } | string; bay: { code: string } | string; mechanic?: { name: string }; description: string; status: string; requests?: any[] }
+export interface PartRequest { id: string; code: string; status: string; priority: "NORMAL" | "URGENT"; quantity: number; sku: string; partName: string; plate: string; orderCode: string; model: string; bay: string; mechanic: string; requestedBy: string; createdAt: string; part?: { sku: string; name: string; priceWorkshop: number; stock: number; reserved: number } }
+export interface InventoryItem { id: string; sku: string; name: string; category: string; onHand: number; reserved: number; available: number; status: "LOW" | "OUT" | "IN_STOCK"; locations: { id: string; warehouse: string; shelf: number; drawer: number }[]; priceWorkshop: number; priceRetail?: number; cost?: number }

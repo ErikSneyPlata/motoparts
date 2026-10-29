@@ -1,0 +1,344 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  MECHANIC
+  WAREHOUSE
+  SALES
+  MANAGER
+}
+enum RequestPriority {
+  NORMAL
+  URGENT
+}
+enum RequestStatus {
+  PENDING
+  PREPARING
+  TO_BAY
+  READY_FOR_PICKUP
+  DELIVERED
+  RESTOCK_WAIT
+  CANCELLED
+}
+enum MovementType {
+  ENTRY
+  EXIT
+  ADJUSTMENT
+}
+enum PurchaseOrderStatus {
+  DRAFT
+  SENT
+  RECEIVED
+}
+enum BayStatus {
+  AVAILABLE
+  OCCUPIED
+  SERVICE
+}
+enum RepairStatus {
+  OPEN
+  DIAGNOSIS
+  IN_PROGRESS
+  WAITING_PARTS
+  COMPLETED
+  CANCELLED
+}
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  OTHER
+}
+
+model SequenceCounter {
+  key String @id
+  value Int @default(0)
+}
+
+model User {
+  id String @id @default(cuid())
+  name String
+  email String @unique
+  passwordHash String
+  role Role
+  specialty String?
+  isActive Boolean @default(true)
+  shift String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  bays ServiceBay[]
+  repairOrders RepairOrder[] @relation("MechanicOrders")
+  requests PartRequest[] @relation("RequestedBy")
+  assignedRequests PartRequest[] @relation("AssignedTo")
+  movements InventoryMovement[]
+  sales Sale[]
+  auditLogs AuditLog[]
+  histories RequestStatusHistory[]
+  purchaseOrders PurchaseOrder[]
+}
+
+model Brand {
+  id String @id @default(cuid())
+  name String @unique
+  models MotorcycleModel[]
+}
+model MotorcycleModel {
+  id String @id @default(cuid())
+  brandId String
+  name String
+  yearFrom Int
+  yearTo Int
+  displacementCc Int?
+  powerHp Decimal? @db.Decimal(6,2)
+  technology String?
+  photoUrl String?
+  brand Brand @relation(fields: [brandId], references: [id])
+  manuals Manual[]
+  systems SystemGroup[]
+  compatibilities PartCompatibility[]
+  repairOrders RepairOrder[]
+  @@unique([brandId, name])
+  @@index([brandId, name])
+}
+model Manual {
+  id String @id @default(cuid())
+  modelId String
+  reference String
+  version String
+  validUntil DateTime?
+  fileUrl String?
+  isCurrent Boolean @default(false)
+  model MotorcycleModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  @@index([modelId, isCurrent])
+}
+model SystemGroup {
+  id String @id @default(cuid())
+  modelId String
+  name String
+  model MotorcycleModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  hotspots ExplodedHotspot[]
+  torques TorqueSpec[]
+}
+model ExplodedHotspot {
+  id String @id @default(cuid())
+  systemGroupId String
+  number Int
+  label String
+  partId String?
+  x Decimal @db.Decimal(6,3)
+  y Decimal @db.Decimal(6,3)
+  systemGroup SystemGroup @relation(fields: [systemGroupId], references: [id], onDelete: Cascade)
+  part Part? @relation(fields: [partId], references: [id], onDelete: SetNull)
+  @@unique([systemGroupId, number])
+}
+model TorqueSpec {
+  id String @id @default(cuid())
+  systemGroupId String
+  label String
+  value String
+  notes String?
+  systemGroup SystemGroup @relation(fields: [systemGroupId], references: [id], onDelete: Cascade)
+}
+model PartCategory {
+  id String @id @default(cuid())
+  name String @unique
+  parts Part[]
+}
+model Part {
+  id String @id @default(cuid())
+  sku String @unique
+  name String
+  description String?
+  categoryId String
+  brandName String?
+  oemCode String?
+  ean13 String?
+  photoUrl String?
+  priceWorkshop Decimal @db.Decimal(12,2)
+  priceRetail Decimal @db.Decimal(12,2)
+  cost Decimal @default(0) @db.Decimal(12,2)
+  minStock Int @default(5)
+  qrPayload String @unique
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  category PartCategory @relation(fields: [categoryId], references: [id])
+  compatibilities PartCompatibility[]
+  stocks Stock[]
+  movements InventoryMovement[]
+  requests PartRequest[]
+  saleItems SaleItem[]
+  hotspots ExplodedHotspot[]
+  purchaseItems PurchaseOrderItem[]
+  @@index([name])
+}
+model PartCompatibility {
+  partId String
+  modelId String
+  yearFrom Int
+  yearTo Int
+  part Part @relation(fields: [partId], references: [id], onDelete: Cascade)
+  model MotorcycleModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  @@id([partId, modelId, yearFrom])
+  @@index([modelId, yearFrom, yearTo])
+}
+model WarehouseLocation {
+  id String @id @default(cuid())
+  warehouse String
+  shelf Int
+  drawer Int
+  stocks Stock[]
+  @@unique([warehouse, shelf, drawer])
+}
+model Stock {
+  id String @id @default(cuid())
+  partId String
+  locationId String
+  onHand Int @default(0)
+  reserved Int @default(0)
+  part Part @relation(fields: [partId], references: [id], onDelete: Cascade)
+  location WarehouseLocation @relation(fields: [locationId], references: [id])
+  @@unique([partId, locationId])
+  @@index([partId])
+}
+model InventoryMovement {
+  id String @id @default(cuid())
+  code String @unique
+  partId String
+  type MovementType
+  quantity Int
+  reason String
+  userId String
+  requestId String?
+  saleId String?
+  createdAt DateTime @default(now())
+  part Part @relation(fields: [partId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  request PartRequest? @relation(fields: [requestId], references: [id])
+  sale Sale? @relation(fields: [saleId], references: [id])
+  @@index([partId, createdAt])
+}
+model Supplier {
+  id String @id @default(cuid())
+  name String
+  contact String?
+  orders PurchaseOrder[]
+}
+model PurchaseOrder {
+  id String @id @default(cuid())
+  supplierId String
+  status PurchaseOrderStatus @default(DRAFT)
+  createdBy String
+  createdAt DateTime @default(now())
+  supplier Supplier @relation(fields: [supplierId], references: [id])
+  creator User @relation(fields: [createdBy], references: [id])
+  items PurchaseOrderItem[]
+}
+model PurchaseOrderItem {
+  id String @id @default(cuid())
+  purchaseOrderId String
+  partId String
+  quantity Int
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  part Part @relation(fields: [partId], references: [id])
+}
+model ServiceBay {
+  id String @id @default(cuid())
+  code String @unique
+  status BayStatus @default(AVAILABLE)
+  mechanicId String?
+  mechanic User? @relation(fields: [mechanicId], references: [id], onDelete: SetNull)
+  repairOrders RepairOrder[]
+}
+model RepairOrder {
+  id String @id @default(cuid())
+  code String @unique
+  plate String
+  modelId String
+  bayId String
+  mechanicId String
+  description String
+  mileageKm Int?
+  status RepairStatus @default(OPEN)
+  createdAt DateTime @default(now())
+  model MotorcycleModel @relation(fields: [modelId], references: [id])
+  bay ServiceBay @relation(fields: [bayId], references: [id])
+  mechanic User @relation("MechanicOrders", fields: [mechanicId], references: [id])
+  requests PartRequest[]
+  @@index([status, createdAt])
+}
+model PartRequest {
+  id String @id @default(cuid())
+  code String @unique
+  repairOrderId String
+  partId String
+  quantity Int
+  priority RequestPriority @default(NORMAL)
+  notes String?
+  status RequestStatus @default(PENDING)
+  requestedById String
+  assignedToId String?
+  digitalSignature String?
+  qrValidatedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  repairOrder RepairOrder @relation(fields: [repairOrderId], references: [id])
+  part Part @relation(fields: [partId], references: [id])
+  requestedBy User @relation("RequestedBy", fields: [requestedById], references: [id])
+  assignedTo User? @relation("AssignedTo", fields: [assignedToId], references: [id])
+  histories RequestStatusHistory[]
+  movements InventoryMovement[]
+  @@index([status, priority, createdAt])
+}
+model RequestStatusHistory {
+  id String @id @default(cuid())
+  requestId String
+  fromStatus RequestStatus?
+  toStatus RequestStatus
+  userId String
+  at DateTime @default(now())
+  request PartRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+}
+model Sale {
+  id String @id @default(cuid())
+  code String @unique
+  sellerId String
+  total Decimal @db.Decimal(12,2)
+  paymentMethod PaymentMethod
+  createdAt DateTime @default(now())
+  seller User @relation(fields: [sellerId], references: [id])
+  items SaleItem[]
+  movements InventoryMovement[]
+}
+model SaleItem {
+  id String @id @default(cuid())
+  saleId String
+  partId String
+  quantity Int
+  unitPrice Decimal @db.Decimal(12,2)
+  sale Sale @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  part Part @relation(fields: [partId], references: [id])
+}
+model AuditLog {
+  id String @id @default(cuid())
+  userId String?
+  action String
+  entity String
+  entityId String?
+  detail Json?
+  ip String?
+  at DateTime @default(now())
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  @@index([entity, at])
+  @@index([userId, at])
+}
+
+

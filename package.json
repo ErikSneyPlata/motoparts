@@ -1,0 +1,19 @@
+{
+  "name": "motoparts-solutions",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": ["client", "server"],
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c yellow,cyan \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm --workspace server run dev",
+    "dev:client": "npm --workspace client run dev",
+    "build": "npm run build --workspace server && npm run build --workspace client",
+    "db:generate": "npm --workspace server run db:generate",
+    "db:migrate": "npm --workspace server run db:migrate",
+    "db:deploy": "npm --workspace server run db:deploy",
+    "db:seed": "npm --workspace server run db:seed"
+  },
+  "devDependencies": { "concurrently": "^9.2.1" },
+  "engines": { "node": ">=22.12.0" }
+}
+
