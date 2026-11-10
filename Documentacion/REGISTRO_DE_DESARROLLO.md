@@ -43,7 +43,7 @@
 - Verificación de producción: la base de datos respondía en `/api/health` y las rutas API de un segmento alcanzaban Express, pero las rutas anidadas devolvían 404 de Vercel antes de llegar a la aplicación.
 - Se movió la autenticación a `/api/session` y se agregó un rewrite explícito de `/api/:path*` a una función común. Un adaptador restaura la ruta original y conserva los parámetros de consulta antes de invocar Express.
 - El login y los permisos por rol se probaron localmente contra Supabase con los cinco roles demo: accesos permitidos respondieron 200 y los denegados respondieron 403. La compilación de backend y frontend completó correctamente.
-- Primer despliegue en `main`: `533a583`; la verificación post despliegue mostró que aún se requería el rewrite para rutas con varios segmentos. Esta es la corrección adicional que debe publicarse.
+- Primer despliegue en `main`: `533a583`; la verificación detectó que aún se requería el rewrite para rutas con varios segmentos. La corrección se publicó en `e243a1b`; `/api/session/me`, `/api/workshop/summary` y `/api/models/1` ya llegan al middleware de Express y responden 401 sin token, como se espera.
 
 ## Convenciones
 Registrar aquí decisiones que cambien arquitectura, reglas implementadas, cambios de esquema y cualquier limitación detectada. No guardar secretos ni datos de acceso.
