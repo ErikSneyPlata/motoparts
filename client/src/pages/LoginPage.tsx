@@ -12,7 +12,7 @@ export function LoginPage() {
   useEffect(() => { const demo = new URLSearchParams(location.search).get("demo"); if (demo && import.meta.env.DEV) { setEmail(demo); setPassword("Demo2026*"); void handleLogin(demo, "Demo2026*"); } }, [location.search]);
   async function handleLogin(overrideEmail = email, overridePassword = password) {
     setBusy(true); setError("");
-    try { const result = await send<{token:string;user:SessionUser}>("/auth/login", { email: overrideEmail, password: overridePassword }); setSession(result.token, result.user); navigate(result.user.role === "MANAGER" ? "/dashboard" : result.user.role === "SALES" ? "/sales" : result.user.role === "WAREHOUSE" ? "/requests" : "/workshop", { replace: true }); }
+    try { const result = await send<{token:string;user:SessionUser}>("/session/login", { email: overrideEmail, password: overridePassword }); setSession(result.token, result.user); navigate(result.user.role === "MANAGER" ? "/dashboard" : result.user.role === "SALES" ? "/sales" : result.user.role === "WAREHOUSE" ? "/requests" : "/workshop", { replace: true }); }
     catch (e) { setError(e instanceof Error ? e.message : "No fue posible iniciar sesión"); }
     finally { setBusy(false); }
   }

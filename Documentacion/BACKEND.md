@@ -7,10 +7,10 @@
 Express 5, TypeScript, Zod, Prisma ORM 7 y PostgreSQL. Prisma usa `@prisma/adapter-pg` en runtime; `prisma.config.ts` toma `DIRECT_URL` para tareas de CLI/migración y el pool de aplicación se configura en `DATABASE_URL`.
 
 ## Autenticación y autorización
-`POST /api/auth/login` verifica hash bcrypt y firma JWT HS256 con audiencia, emisor y vencimiento. `GET /api/auth/me` requiere token válido y usuario activo. Roles se obtienen desde la base de datos en cada petición; nunca se confía en el selector de rol del cliente. El login aplica limitación de intentos y no informa si el correo existe.
+`POST /api/session/login` verifica hash bcrypt y firma JWT HS256 con audiencia, emisor y vencimiento. `GET /api/session/me` requiere token válido y usuario activo. Roles se obtienen desde la base de datos en cada petición; nunca se confía en el selector de rol del cliente. El login aplica limitación de intentos y no informa si el correo existe.
 
 ## Módulos HTTP
-- `/api/auth`: login y consulta del usuario de la sesión.
+- `/api/session`: login y consulta del usuario de la sesión.
 - `/api`: marcas, modelos, manuales, sistemas, hotspots, repuestos, compatibilidad, QR, búsqueda global, dashboard y reportes.
 - `/api/repair-orders`, `/api/bays`, `/api/workshop/summary`: órdenes, bahías y métricas del taller.
 - `/api/requests`: creación con validación de compatibilidad y reserva, bandeja, transiciones, cancelación, validación QR, reabastecimiento y borrador a proveedor.
