@@ -1,6 +1,6 @@
 import { useSessionStore } from "./store/session";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "/api" : "http://localhost:4000/api");
 export class ApiError extends Error { constructor(message: string, public status: number) { super(message); } }
 export async function api<T = any>(path: string, init: RequestInit = {}): Promise<T> {
   const token = useSessionStore.getState().token;
