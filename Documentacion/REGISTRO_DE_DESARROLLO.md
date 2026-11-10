@@ -39,5 +39,11 @@
 - Pulido UX: aumenté contraste de acciones secundarias, acento de iconos y foco de teclado; los botones con tooltip muestran también su etiqueta, los iconos solos tienen nombre accesible y el formulario de inventario adapta el texto del botón a la acción.
 - Pendiente de configuración del proyecto: credenciales propias de Supabase, aplicar migración y seed sobre una base de desarrollo conectada, configurar secretos/orígenes del despliegue y hacer revisión funcional en navegador/dispositivos.
 
+## 2026-11-10 — Enrutamiento API y acceso de sesión en Vercel
+- Verificación de producción: la base de datos respondía en `/api/health` y las rutas API de un segmento alcanzaban Express, pero las rutas anidadas devolvían 404 de Vercel antes de llegar a la aplicación.
+- Se movió la autenticación a `/api/session` y se agregó un rewrite explícito de `/api/:path*` a una función común. Un adaptador restaura la ruta original y conserva los parámetros de consulta antes de invocar Express.
+- El login y los permisos por rol se probaron localmente contra Supabase con los cinco roles demo: accesos permitidos respondieron 200 y los denegados respondieron 403. La compilación de backend y frontend completó correctamente.
+- Primer despliegue en `main`: `533a583`; la verificación post despliegue mostró que aún se requería el rewrite para rutas con varios segmentos. Esta es la corrección adicional que debe publicarse.
+
 ## Convenciones
 Registrar aquí decisiones que cambien arquitectura, reglas implementadas, cambios de esquema y cualquier limitación detectada. No guardar secretos ni datos de acceso.

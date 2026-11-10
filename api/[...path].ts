@@ -1,2 +1,2 @@
-import { app } from "../server/src/app.js";
-export default app;
+import { handleVercelApiRequest } from "../server/src/vercel-handler.js";
+export default handleVercelApiRequest;

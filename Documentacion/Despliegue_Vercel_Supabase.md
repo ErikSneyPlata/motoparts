@@ -2,7 +2,7 @@
 
 ## Arquitectura
 
-El monorepo se despliega como un proyecto Vercel con frontend Vite (`client/dist`) y una función Node.js Express que atiende `/api/*` desde `api/[...path].ts`. Las llamadas del navegador usan el mismo dominio en producción y `http://localhost:4000/api` en desarrollo. El rewrite de la SPA excluye `/api/*` para conservar el enrutamiento de la función.
+El monorepo se despliega como un proyecto Vercel con frontend Vite (`client/dist`) y una función Node.js Express. El rewrite `/api/:path*` envía todas las rutas, incluidas las anidadas, a `api/handler.ts`; el adaptador `server/src/vercel-handler.ts` reconstruye la ruta original antes de entregarla a Express. Las llamadas del navegador usan el mismo dominio en producción y `http://localhost:4000/api` en desarrollo. El rewrite de la SPA se aplica después de la regla de API.
 
 PostgreSQL está alojado en Supabase. Prisma genera el cliente durante el build de Vercel antes de compilar el frontend.
 
